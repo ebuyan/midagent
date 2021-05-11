@@ -26,12 +26,11 @@ func (m MidAgent) Run() {
 	for {
 		select {
 		case <-ticker.C:
-			if job, ok, err := m.repository.GetJob(); ok {
-				if err != nil {
-					log.Println(err)
-				} else {
-					m.runJob(job)
-				}
+			job, ok, err := m.repository.GetJob()
+			if err != nil {
+				log.Println(err)
+			} else if ok {
+				go m.runJob(job)
 			}
 		}
 	}
@@ -66,7 +65,7 @@ func (m MidAgent) getCmd(script string) (cmd *exec.Cmd) {
 	switch runtime.GOOS {
 	case "windows":
 		cmd = exec.Command("powershell", "-Command", script)
-	case "linux":
+	case "linux", "darwin":
 		cmd = exec.Command("bash", "-c", script)
 	default:
 		log.Fatalln("OS not implimented")
